@@ -17,38 +17,33 @@ pipeline {
                     set PYTHONPATH=%WORKSPACE%
                     flake8 --exit-zero --format=pylint app >flake8.out
                 '''
-                //recordIssues tools: [flake8(name: 'Flake8', pattern: 'flake8.out')], qualityGates: [[threshold: 10, type: 'TOTAL', unstable: true], [threshold: 11, type: 'TOTAL', unstable: false]]
                 recordIssues qualityGates: [[integerThreshold: 8, threshold: 8.0, type: 'TOTAL'], [criticality: 'FAILURE', integerThreshold: 10, threshold: 10.0, type: 'TOTAL']], sourceCodeRetention: 'LAST_BUILD', tools: [flake8(name: 'Flake8', pattern: 'flake8.out')]
             }
         }
         
-        stage('Tests'){
-            parallel {
-                stage('Unit') {
-                    steps {
-                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                            bat '''
-                                set PYTHONPATH=%WORKSPACE%
-                                pytest --junitxml=result-unit.xml test\\unit
-                            '''
-                        }
-                    }
+        stage('Unit') {
+            steps {
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    bat '''
+                        set PYTHONPATH=%WORKSPACE%
+                        pytest --junitxml=result-unit.xml test\\unit
+                    '''
                 }
-                
-                stage('Rest') {
-                    steps {
-                        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                            bat '''
-                                set FLASK_APP=app\\api.py
-                                start flask run
-                                start java -jar C:\\Unir\\Utilidades\\wiremock-standalone-3.13.2.jar --port 9090 --root-dir test\\wiremock
-                                
-                                ping -n 2 127.0.0.1
-                                
-                                pytest --junitxml=result-rest.xml test\\rest
-                            '''
-                        }
-                    }
+            }
+        }
+        
+        stage('Rest') {
+            steps {
+                catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+                    bat '''
+                        set FLASK_APP=app\\api.py
+                        start flask run
+                        start java -jar C:\\Unir\\Utilidades\\wiremock-standalone-3.13.2.jar --port 9090 --root-dir test\\wiremock
+                        
+                        ping -n 2 127.0.0.1
+                        
+                        pytest --junitxml=result-rest.xml test\\rest
+                    '''
                 }
             }
         }
