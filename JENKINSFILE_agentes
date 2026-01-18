@@ -18,7 +18,7 @@ pipeline {
             parallel{
              
                 stage('Static'){
-                    agent {label 'windows1'}
+                    agent {label 'windows'}
                     steps {
                         unstash name:'code'
                         bat 'whoami'
@@ -33,7 +33,7 @@ pipeline {
                 }
                 
                 stage('Cobertura') {
-                    agent {label 'windows1'}
+                    agent {label 'windows'}
                     steps {
                         unstash name:'code'
                         bat 'whoami'
@@ -86,7 +86,7 @@ pipeline {
         }
 
         stage('Unit') {
-            agent {label 'windows2'}
+            agent {label 'windows'}
             steps {
                 unstash name:'result-unit'
                 bat 'whoami'
@@ -100,7 +100,7 @@ pipeline {
         }
         
         stage('Performance') {
-            agent {label 'windows1'}
+            agent {label 'windows2'}
             steps {
                 unstash name:'code'
                 bat 'whoami'
