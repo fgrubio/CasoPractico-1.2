@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     stages {
+        
         stage('Get Code') {
             steps {
                 // Obtener código del repo
                 git 'https://github.com/fgrubio/CasoPractico-1.2.git'
-                bat 'dir'
                 echo WORKSPACE
             }
         }
@@ -21,13 +21,20 @@ pipeline {
             }
         }
         
+        stage('Cobertura') {
+            steps {
+                bat '''
+                    set PYTHONPATH=%WORKSPACE%
+                    coverage run --branch --source=app --omit=app\\__init__.py,app\\api.py -m pytest --junitxml=result-unit.xml test\\unit
+                    coverage xml
+                '''
+                recordCoverage qualityGates: [[criticality: 'ERROR', integerThreshold: 85, metric: 'LINE', threshold: 85.0], [criticality: 'NOTE', integerThreshold: 95, metric: 'LINE', threshold: 95.0], [criticality: 'ERROR', integerThreshold: 80, metric: 'BRANCH', threshold: 80.0], [criticality: 'NOTE', integerThreshold: 90, metric: 'BRANCH', threshold: 90.0]], tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']]            
+            }
+        }
+        
         stage('Unit') {
             steps {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
-                    bat '''
-                        set PYTHONPATH=%WORKSPACE%
-                        pytest --junitxml=result-unit.xml test\\unit
-                    '''
                     junit healthScaleFactor: 0.0, testResults: 'result-unit.xml'
                 }
             }
@@ -40,24 +47,11 @@ pipeline {
                         set FLASK_APP=app\\api.py
                         start flask run
                         start java -jar C:\\Unir\\Utilidades\\wiremock-standalone-3.13.2.jar --port 9090 --root-dir test\\wiremock
-                        
-                        ping -n 2 127.0.0.1
-                        
+                        ping -n 3 127.0.0.1
                         pytest --junitxml=result-rest.xml test\\rest
                     '''
                     junit healthScaleFactor: 0.0, testResults: 'result-rest.xml'
                 }
-            }
-        }
-        
-        stage('Cobertura') {
-            steps {
-                bat '''
-                    set PYTHONPATH=%WORKSPACE%
-                    coverage run --branch --source=app --omit=app\\__init__.py,app\\api.py -m pytest test\\unit
-                    coverage xml
-                '''
-                recordCoverage qualityGates: [[criticality: 'ERROR', integerThreshold: 85, metric: 'LINE', threshold: 85.0], [criticality: 'NOTE', integerThreshold: 95, metric: 'LINE', threshold: 95.0], [criticality: 'ERROR', integerThreshold: 80, metric: 'BRANCH', threshold: 80.0], [criticality: 'NOTE', integerThreshold: 90, metric: 'BRANCH', threshold: 90.0]], tools: [[parser: 'COBERTURA', pattern: 'coverage.xml']]            
             }
         }
         
@@ -75,7 +69,7 @@ pipeline {
                 bat '''
                     set FLASK_APP=app\\api.py
                     start flask run
-                    ping -n 4 127.0.0.1
+                    ping -n 3 127.0.0.1
                     C:\\Unir\\Utilidades\\apache-jmeter-5.6.3\\bin\\jmeter -n -t test\\jmeter\\CasoPractico-1.2.jmx -f -l flask.jtl
                 '''
                 perfReport sourceDataFiles: 'flask.jtl'
