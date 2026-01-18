@@ -28,6 +28,7 @@ pipeline {
                         set PYTHONPATH=%WORKSPACE%
                         pytest --junitxml=result-unit.xml test\\unit
                     '''
+                    junit healthScaleFactor: 0.0, testResults: 'result-unit.xml'
                 }
             }
         }
@@ -44,6 +45,7 @@ pipeline {
                         
                         pytest --junitxml=result-rest.xml test\\rest
                     '''
+                    junit healthScaleFactor: 0.0, testResults: 'result-rest.xml'
                 }
             }
         }
