@@ -6,7 +6,8 @@ pipeline {
         stage('Get Code') {
             steps {
                 // Obtener código del repo
-                git 'https://github.com/fgrubio/CasoPractico-1.2.git'
+                git branch: 'feature_fix_coverage',
+                    url: 'https://github.com/fgrubio/CasoPractico-1.2.git'
                 echo WORKSPACE
             }
         }
