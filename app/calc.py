@@ -22,7 +22,7 @@ class Calculator:
         self.check_types(x, y)
         if y == 0:
             raise TypeError("Division by zero is not possible")
-        return x / y
+        else return x / y
 
     def power(self, x, y):
         self.check_types(x, y)
